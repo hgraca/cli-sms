@@ -13,6 +13,7 @@ parameters:
     sms.sender: 'Werkspot'
     sms.twilio.client.sid: 'some-dummy-id'
     sms.twilio.client.token: 'some-dummy-token'
+    sms.message_bird.client.access_key: 'some-dummy-access_key'
 
 services:
     # default configuration for services in *this* file
@@ -102,6 +103,9 @@ services:
 
     libphonenumber\PhoneNumberUtil:
         factory: ['libphonenumber\PhoneNumberUtil', getInstance]
+
+    MessageBird\Client:
+    - '%sms.message_bird.client.access_key%'
 
     Symfony\Bridge\PsrHttpMessage\HttpFoundationFactoryInterface:
         class: Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory
