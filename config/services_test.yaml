@@ -1,0 +1,40 @@
+twig:
+    paths:
+        '%kernel.project_dir%/tests/TestCase': TestCase
+
+parameters:
+    # All services in this list will be added to the container used in tests
+    # This is specially useful for the services provided by 3rd party bundles
+    test.container.service_list:
+        - 'Acme\App\Core\Component\User\Application\Repository\DQL\UserRepository'
+        - 'Acme\App\Core\Port\Lock\LockManagerInterface'
+        - 'Acme\App\Core\Port\Persistence\DQL\DqlQueryBuilderInterface'
+        - 'Acme\App\Core\Port\Persistence\QueryServiceInterface'
+        - 'Acme\App\Core\Port\Persistence\QueryServiceRouterInterface'
+        - 'Acme\App\Core\Port\Persistence\TransactionServiceInterface'
+        - 'Acme\App\Core\Port\Router\UrlGeneratorInterface'
+        - 'Acme\App\Core\Port\TemplateEngine\TemplateEngineInterface'
+        - 'Acme\App\Core\Port\Translation\TranslatorInterface'
+        - 'Acme\App\Infrastructure\Persistence\Doctrine\DqlPersistenceService'
+        - 'Acme\App\Presentation\Console\Component\User\AddUserCommand'
+        - 'Acme\App\Presentation\Web\Core\Port\FlashMessage\FlashMessageServiceInterface'
+        - 'Acme\App\Presentation\Web\Core\Port\Form\FormFactoryInterface'
+        - 'Acme\App\Presentation\Web\Core\Port\Response\ResponseFactoryInterface'
+        - 'Acme\App\Test\Framework\Decorator\EmailCollectorEmailerDecorator'
+        - 'Doctrine\ORM\EntityManagerInterface'
+        - 'session'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        # automatically injects dependencies in your services
+        autowire: true
+        # automatically registers your services as commands, event subscribers, etc.
+        autoconfigure: true
+        # this means you cannot fetch services directly from the container via $container->get()
+        # if you need to do this, you can override this setting on individual services
+        public: false
+
+    # So we can use these fixtures
+    Acme\App\Test\Fixture\Doctrine\:
+        resource: '../tests/Fixture/Doctrine/*'

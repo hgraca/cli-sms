@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- https://phpunit.de/manual/current/en/appendixes.configuration.html -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/7.1/phpunit.xsd"
+         colors="true"
+         bootstrap="vendor/autoload.php"
+>
+    <php>
+        <ini name="error_reporting" value="-1" />
+        <env name="KERNEL_CLASS" value="Acme\App\Infrastructure\Framework\Symfony\Kernel" />
+        <env name="APP_ENV" value="test"/>
+        <env name="APP_DEBUG" value="1"/>
+        <env name="APP_SECRET" value="5a79a1c866efef9ca1800f971d689f3e"/>
+        <!-- define your env variables for the test env here -->
+
+        <!-- ###+ doctrine/doctrine-bundle ### -->
+        <env name="DATABASE_URL" value="sqlite:///var/data/blog_test.sqlite"/>
+        <!-- ###- doctrine/doctrine-bundle ### -->
+
+        <!-- ###+ symfony/swiftmailer-bundle ### -->
+        <env name="MAILER_URL" value="null://localhost"/>
+        <!-- ###- symfony/swiftmailer-bundle ### -->
+    </php>
+
+    <testsuites>
+        <testsuite name="all">
+            <directory>tests/</directory>
+            <directory>lib/*/tests/</directory>
+        </testsuite>
+        <testsuite name="unit" >
+            <directory suffix="UnitTest.php">tests</directory>
+            <directory suffix="UnitTest.php">lib/*/tests/</directory>
+        </testsuite>
+        <testsuite name="integration">
+            <directory suffix="IntegrationTest.php">tests/</directory>
+            <directory suffix="IntegrationTest.php">lib/*/tests/</directory>
+        </testsuite>
+        <testsuite name="functional">
+            <directory suffix="FunctionalTest.php">tests/</directory>
+            <directory suffix="FunctionalTest.php">lib/*/tests/</directory>
+        </testsuite>
+    </testsuites>
+
+    <filter>
+        <!-- Perform code coverage PHP for files in these folders, including the files not run. -->
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">src</directory>
+            <directory suffix=".php">lib/*/src</directory>
+        </whitelist>
+    </filter>
+
+    <listeners>
+        <listener class="Symfony\Bridge\PhpUnit\SymfonyTestsListener"/>
+
+        <!-- At the beginning of every test run, if there are changes to the DB or the test DB is not there,
+             it will generate the test DB and create a backup of it and a backup of the fixtures references.
+             At the beginning of every test it can recover the test DB backup, however since we are using
+             DAMA\DoctrineTestBundle that is not necessary, so we turn it off. -->
+        <listener class="\Hgraca\DoctrineTestDbRegenerationBundle\EventSubscriber\DbRegenerationPHPUnitEventSubscriber">
+            <arguments>
+                <integer>0</integer> <!-- disable $shouldRegenerateOnEveryTest -->
+                <integer>1</integer> <!-- enable $shouldRegenerateDbOnEveryTest -->
+                <integer>0</integer> <!-- disable $shouldReuseExistingDbBkp -->
+                <array>
+                    <!-- Pass the migrations versions to run.
+                         These are only related to tables that have no entities, and therefore not created by the
+                         Doctrine schema manager. -->
+                    <element key="0"><string>20180118095302</string></element>
+                </array>
+            </arguments>
+        </listener>
+
+        <!-- it begins a database transaction before every testcase and rolls it back after
+             the test finished, so tests can manipulate the database without affecting other tests -->
+        <listener class="\DAMA\DoctrineTestBundle\PHPUnit\PHPUnitListener" />
+    </listeners>
+</phpunit>
