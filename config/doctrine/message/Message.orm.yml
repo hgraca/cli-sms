@@ -1,0 +1,14 @@
+Acme\App\Core\Component\Message\Domain\Message\Message:
+    type: entity
+    table: Message
+    id:
+        id:
+            type: message_id
+            generator: { strategy: NONE }
+    fields:
+        recipient:
+            type: string
+        message:
+            type: text
+        sentAt:
+            type: datetime_immutable
