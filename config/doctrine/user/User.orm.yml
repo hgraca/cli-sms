@@ -1,0 +1,23 @@
+Acme\App\Core\Component\User\Domain\User\User:
+    type: entity
+    table: User
+    id:
+        id:
+            type: user_id
+            generator: { strategy: NONE }
+    fields:
+        fullName:
+            type: string
+        username:
+            type: string
+            unique: true
+        email:
+            type: string
+            unique: true
+        mobile:
+            type: string
+            unique: true
+        password:
+            type: string
+        roles:
+            type: json

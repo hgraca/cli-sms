@@ -1,0 +1,14 @@
+# These lines define a route using YAML configuration. The controller used by
+# the route (FrameworkBundle:Template:template) is a convenient shortcut when
+# the template can be rendered without executing any logic in your own controller.
+# See https://symfony.com/doc/current/cookbook/templating/render_without_controller.html
+
+web_routes: # routes for the website, if we would have an API we would have a new node like this
+    resource: 'routes/web/routes.yaml'
+
+# this route must be the last, its used to redirect any URL with a trailing slash that was not matched
+redirect_url_with_trailing_slash:
+    path: '{url_with_trailing_slash}'
+    controller: Acme\App\Presentation\Web\Core\Component\BackslashRedirectController::removeTrailingSlash
+    requirements:
+        url_with_trailing_slash: '.*\/$'
