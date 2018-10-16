@@ -14,6 +14,8 @@ parameters:
     # SMS settings
     sms.default_destination: '+31631769214'
     sms.sender: 'AcmeApp'
+    sms.twilio.client.sid: 'some-dummy-id'
+    sms.twilio.client.token: 'some-dummy-token'
 
 services:
     # default configuration for services in *this* file
@@ -98,6 +100,10 @@ services:
     Acme\App\Core\Port\Persistence\QueryServiceRouter:
         - '@Acme\App\Infrastructure\Persistence\Doctrine\DqlPersistenceService'
 
+    # There are several implementations of this interface, so we need to choose one of them
+    Acme\App\Core\Port\SmsClient\SmsClientInterface:
+        class: Acme\App\Infrastructure\SmsClient\Logger\LoggerSmsClient
+
     Acme\App\Core\Port\Validation\PhoneNumber\PhoneNumberValidatorInterface:
         class: Acme\App\Infrastructure\Validation\PhoneNumber\LibPhoneNumber\PhoneNumberValidator
         arguments:
@@ -115,3 +121,7 @@ services:
     Acme\App\Core\Component\User\Application\Repository\UserRepositoryInterface:
         class: Acme\App\Core\Component\User\Application\Repository\DQL\UserRepository
         public: true
+
+    Twilio\Rest\Client:
+    - '%sms.twilio.client.sid%'
+    - '%sms.twilio.client.token%'
