@@ -69,6 +69,9 @@ db-inspect:
 	echo "=== KeyValueStorage ==="
 	sqlite3 -column -header ${DB_PATH} 'SELECT * FROM KeyValueStorage;'
 	echo
+	echo "=== Message ==="
+	sqlite3 -column -header ${DB_PATH} 'SELECT * FROM Message;'
+	echo
 	echo "=== User ==="
 	sqlite3 -column -header ${DB_PATH} 'SELECT * FROM User;'
 	echo

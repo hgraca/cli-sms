@@ -15,6 +15,7 @@ doctrine:
             uuid: Acme\App\Infrastructure\Persistence\Doctrine\Type\UuidType
             binary_uuid: Acme\App\Infrastructure\Persistence\Doctrine\Type\BinaryUuidType
             user_id: Acme\App\Infrastructure\Persistence\Doctrine\Type\UserIdType
+            message_id: Acme\App\Infrastructure\Persistence\Doctrine\Type\MessageIdType
     orm:
         auto_generate_proxy_classes: '%kernel.debug%'
         dql:
@@ -25,6 +26,12 @@ doctrine:
         mappings:
             # Each mapping must have its own 'dir' directive.
             # If we put them all in the same dir, they will not be found.
+            Acme\App\Core\Component\Message\Domain\Message:
+                is_bundle: false
+                type: yml
+                dir: '%kernel.project_dir%/config/doctrine/message'
+                prefix: 'Acme\App\Core\Component\Message\Domain\Message'
+                alias: Message
             Acme\App\Core\Component\User\Domain\User:
                 is_bundle: false
                 type: yml
