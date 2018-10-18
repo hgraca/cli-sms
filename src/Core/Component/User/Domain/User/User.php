@@ -67,6 +67,11 @@ class User implements \Serializable
      */
     private $roles = [];
 
+    /**
+     * @var int
+     */
+    private $messageCount = 0;
+
     private function __construct()
     {
         $this->id = new UserId();
@@ -196,5 +201,10 @@ class User implements \Serializable
         }
 
         return false;
+    }
+
+    public function incrementMessageCount(): void
+    {
+        ++$this->messageCount;
     }
 }
