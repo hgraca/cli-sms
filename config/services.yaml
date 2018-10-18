@@ -68,6 +68,13 @@ services:
     # We can make services lazy loaded, so that we can get it from the container and inject it into the service
     # without it being instantiated, adding `lazy: true`
 
+    Acme\App\Core\Component\Message\Application\Listener\MessageSentEventListener:
+        lazy:  true
+        tags:
+        -   name: 'sync_event_dispatcher'
+            event: 'Acme\App\Core\SharedKernel\Component\Message\Application\Event\MessageSentEvent'
+            method: sendSms
+
     # There are several implementations of this interface, so we need to choose one of them
     Acme\App\Core\Port\Persistence\KeyValueStorageInterface:
         class: Acme\App\Infrastructure\Persistence\Doctrine\KeyValueStorage
