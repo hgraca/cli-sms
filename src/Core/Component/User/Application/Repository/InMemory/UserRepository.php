@@ -66,4 +66,15 @@ class UserRepository implements UserRepositoryInterface
 
         return $this->userList[$id->toScalar()];
     }
+
+    public function findOneByMobile(string $mobile): User
+    {
+        foreach ($this->userList as $user) {
+            if ($user->getMobile() === $mobile) {
+                return $user;
+            }
+        }
+
+        throw new EmptyQueryResultException();
+    }
 }
