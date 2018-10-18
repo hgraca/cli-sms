@@ -53,4 +53,9 @@ final class Message
         $this->message = $message;
         $this->sentAt = new DateTimeImmutable();
     }
+
+    public function getId(): MessageId
+    {
+        return $this->id;
+    }
 }
