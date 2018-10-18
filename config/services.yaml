@@ -75,6 +75,13 @@ services:
             event: 'Acme\App\Core\SharedKernel\Component\Message\Application\Event\MessageSentEvent'
             method: sendSms
 
+    Acme\App\Core\Component\User\Application\Listener\MessageSentEventListener:
+        lazy:  true
+        tags:
+        -   name: 'sync_event_dispatcher'
+            event: 'Acme\App\Core\SharedKernel\Component\Message\Application\Event\MessageSentEvent'
+            method: incrementUserMessageCount
+
     # There are several implementations of this interface, so we need to choose one of them
     Acme\App\Core\Port\Persistence\KeyValueStorageInterface:
         class: Acme\App\Infrastructure\Persistence\Doctrine\KeyValueStorage
