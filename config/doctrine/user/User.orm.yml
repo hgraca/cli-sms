@@ -21,3 +21,9 @@ Acme\App\Core\Component\User\Domain\User\User:
             type: string
         roles:
             type: json
+        messageCount:
+            type: integer
+            nullable: false
+            options:
+                unsigned: true
+                default: 0
