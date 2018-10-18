@@ -120,4 +120,14 @@ class UserRepository implements UserRepositoryInterface
 
         return $this->queryService->query($dqlQuery)->getSingleResult();
     }
+
+    public function findOneByMobile(string $mobile): User
+    {
+        $dqlQuery = $this->dqlQueryBuilder->create(User::class)
+            ->where('User.mobile = :mobile')
+            ->setParameter('mobile', $mobile)
+            ->build();
+
+        return $this->queryService->query($dqlQuery)->getSingleResult();
+    }
 }
