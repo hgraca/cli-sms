@@ -16,6 +16,8 @@ namespace Acme\App\Core\Component\Message\Application\Service;
 
 use Acme\App\Core\Component\Message\Application\Repository\MessageRepositoryInterface;
 use Acme\App\Core\Component\Message\Domain\Message\Message;
+use Acme\App\Core\Port\EventDispatcher\EventDispatcherInterface;
+use Acme\App\Core\SharedKernel\Component\Message\Application\Event\MessageSentEvent;
 use Exception;
 
 final class MessageService
@@ -25,16 +27,26 @@ final class MessageService
      */
     private $smsRepository;
 
-    public function __construct(MessageRepositoryInterface $smsRepository)
-    {
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $eventDispatcher;
+
+    public function __construct(
+        MessageRepositoryInterface $smsRepository,
+        EventDispatcherInterface $eventDispatcher
+    ) {
         $this->smsRepository = $smsRepository;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
      * @throws Exception
      */
-    public function send(string $phoneNumber, string $message): void
+    public function send(string $phoneNumber, string $messageText): void
     {
-        $this->smsRepository->add(new Message($phoneNumber, $message));
+        $message = new Message($phoneNumber, $messageText);
+        $this->smsRepository->add($message);
+        $this->eventDispatcher->dispatch(new MessageSentEvent($message->getId(), $phoneNumber, $messageText));
     }
 }
