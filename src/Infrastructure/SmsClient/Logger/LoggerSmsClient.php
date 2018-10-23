@@ -15,42 +15,17 @@ declare(strict_types=1);
 namespace Acme\App\Infrastructure\SmsClient\Logger;
 
 use Acme\App\Core\Port\SmsClient\Exception\SmsClientException;
-use Acme\App\Core\Port\SmsClient\Sms;
-use Acme\App\Core\Port\Validation\PhoneNumber\PhoneNumberCouldNotBeParsedException;
-use Acme\App\Core\Port\Validation\PhoneNumber\PhoneNumberException;
-use Acme\App\Core\Port\Validation\PhoneNumber\PhoneNumberInvalidException;
 use Acme\App\Core\Port\Validation\PhoneNumber\PhoneNumberValidatorInterface;
+use Acme\App\Infrastructure\SmsClient\AbstractClient;
 use Exception;
-use libphonenumber\NumberParseException;
-use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;
 use Psr\Log\LoggerInterface;
 
 /**
  * @author Herberto Graca <herberto.graca@gmail.com>
  */
-final class LoggerSmsClient
+final class LoggerSmsClient extends AbstractClient
 {
-    /**
-     * @var PhoneNumberValidatorInterface
-     */
-    private $phoneNumberValidator;
-
-    /**
-     * @var PhoneNumberUtil
-     */
-    private $phoneNumberUtil;
-
-    /**
-     * @var string
-     */
-    private $countryCode;
-
-    /**
-     * @var string
-     */
-    private $defaultDestination;
-
     /**
      * @var LoggerInterface
      */
@@ -69,33 +44,13 @@ final class LoggerSmsClient
         string $smsSender,
         string $defaultDestination = null
     ) {
-        $this->phoneNumberValidator = $phoneNumberValidator;
-        $this->phoneNumberUtil = $phoneNumberUtil;
-        $this->countryCode = $countryCode;
-        $this->defaultDestination = $defaultDestination;
+        parent::__construct($phoneNumberValidator, $phoneNumberUtil, $countryCode, $defaultDestination);
         $this->sender = $smsSender;
         $this->logger = $logger;
     }
 
-    public function sendSms(Sms $sms): void
+    public function triggerSms(string $phoneNumber, string $content): void
     {
-        $phoneNumber = $this->defaultDestination ?? $sms->getPhoneNumber();
-
-        try {
-            $this->phoneNumberValidator->validate($phoneNumber);
-        } catch (PhoneNumberException $e) {
-            throw new PhoneNumberInvalidException($phoneNumber);
-        }
-
-        try {
-            $phoneNumberObject = $this->phoneNumberUtil->parse($phoneNumber, $this->countryCode);
-        } catch (NumberParseException $exception) {
-            throw new PhoneNumberCouldNotBeParsedException($phoneNumber);
-        }
-
-        $phoneNumber = $this->phoneNumberUtil->format($phoneNumberObject, PhoneNumberFormat::E164);
-        $content = $sms->getContent();
-
         try {
             $this->logger->info("Sms sent from '{$this->sender}' to '$phoneNumber': $content");
         } catch (Exception $e) {
