@@ -1,0 +1,83 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the CLI SMS application,
+ * which is created on top of the Explicit Architecture POC,
+ * which is created on top of the Symfony Demo application.
+ *
+ * This project is used in a workshop to explain Architecture patterns.
+ *
+ * Most of it authored by Herberto Graca.
+ */
+
+namespace Acme\App\Infrastructure\Persistence;
+
+use Acme\App\Core\Port\Persistence\TransactionServiceInterface;
+use Symfony\Component\Console\ConsoleEvents;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpKernel\KernelEvents;
+
+final class TransactionSubscriber implements EventSubscriberInterface
+{
+    private const DEFAULT_PRIORITY = 30;
+
+    /**
+     * @var TransactionServiceInterface
+     */
+    private $transactionService;
+
+    /**
+     * @var int
+     */
+    private static $priority = self::DEFAULT_PRIORITY;
+
+    public function __construct(
+        TransactionServiceInterface $transactionService,
+        int $requestTransactionSubscriberPriority = self::DEFAULT_PRIORITY
+    ) {
+        $this->transactionService = $transactionService;
+        self::$priority = $requestTransactionSubscriberPriority;
+    }
+
+    /**
+     * Return the subscribed events, their methods and possibly their priorities
+     * (the higher the priority the earlier the method is called).
+     *
+     * @see http://symfony.com/doc/current/event_dispatcher.html#creating-an-event-subscriber
+     */
+    public static function getSubscribedEvents(): array
+    {
+        return [
+            KernelEvents::CONTROLLER => ['startTransaction', self::$priority],
+            ConsoleEvents::COMMAND => ['startTransaction', self::$priority],
+
+            KernelEvents::RESPONSE => ['finishTransaction', self::$priority],
+            ConsoleEvents::TERMINATE => ['finishTransaction', self::$priority],
+
+            // In the case that both the Exception and Response events are triggered, we want to make sure the
+            // transaction is rolled back before trying to commit it, so the priority is higher than for the response.
+            KernelEvents::EXCEPTION => ['rollbackTransaction', self::$priority + 1],
+            ConsoleEvents::ERROR => ['rollbackTransaction', self::$priority + 1],
+        ];
+    }
+
+    public function startTransaction(): void
+    {
+        $this->transactionService->startTransaction();
+    }
+
+    public function finishTransaction(): void
+    {
+        // This is is when the ORM writes all staged changes to the DB so we should do this only once in a request,
+        // and only if the use case was successful.
+        // If we would use a command bus, we would do this in one of its middlewares.
+        $this->transactionService->finishTransaction();
+    }
+
+    public function rollbackTransaction(): void
+    {
+        $this->transactionService->rollbackTransaction();
+    }
+}

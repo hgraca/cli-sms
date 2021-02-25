@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-use App\Kernel;
+use Acme\App\Infrastructure\Framework\Symfony\Kernel;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Dotenv\Dotenv;
@@ -20,24 +20,30 @@ if (!class_exists(Application::class) || !class_exists(Dotenv::class)) {
 }
 
 $input = new ArgvInput();
-if (null !== $env = $input->getParameterOption(['--env', '-e'], null, true)) {
-    putenv('APP_ENV='.$_SERVER['APP_ENV'] = $_ENV['APP_ENV'] = $env);
-}
 
-if ($input->hasParameterOption('--no-debug', true)) {
-    putenv('APP_DEBUG='.$_SERVER['APP_DEBUG'] = $_ENV['APP_DEBUG'] = '0');
-}
+$defaultEnv = 'dev';
+$appEnv = $input->getParameterOption(['--env', '-e'], $_ENV['APP_ENV'] ?? $defaultEnv);
+$_SERVER['APP_ENV'] = $appEnv;
+$_ENV['APP_ENV'] = $appEnv;
+putenv("APP_ENV=$appEnv");
 
-(new Dotenv())->bootEnv(dirname(__DIR__).'/.env');
+$defaultDebug = true;
+$isDebug = ($input->hasParameterOption('--no-debug', true) || $appEnv === 'prod')
+    ? false
+    : (bool) ($_ENV['APP_DEBUG'] ?? $defaultDebug);
+$_SERVER['APP_DEBUG'] = $isDebug;
+$_ENV['APP_DEBUG'] = $isDebug;
+putenv('APP_DEBUG=' . ($isDebug ? '1' : '0'));
 
-if ($_SERVER['APP_DEBUG']) {
+(new Dotenv())->bootEnv(dirname(__DIR__).  '/.env');
+
+if ($isDebug) {
     umask(0000);
-
     if (class_exists(Debug::class)) {
         Debug::enable();
     }
 }
 
-$kernel = new Kernel($_SERVER['APP_ENV'], (bool) $_SERVER['APP_DEBUG']);
+$kernel = new Kernel($appEnv, $isDebug);
 $application = new Application($kernel);
 $application->run($input);
