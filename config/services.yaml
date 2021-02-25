@@ -4,28 +4,95 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
+    # Localization
+    locale: 'en'
+    country: 'NL'
+
+    # This parameter defines the codes of the locales (languages) enabled in the application
+    app_locales: en|fr|de|es|cs|nl|ru|uk|ro|pt_BR|pl|it|ja|id|ca|sl|hr|zh_CN
 
 services:
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        # this means you cannot fetch services directly from the container via $container->get()
+        # if you need to do this, you can override this setting on individual services
+        public: false
+        bind: # defines the scalar arguments once and apply them to any service defined/created in this file
+            $locales: '%app_locales%'
+            $countryCode: '%country%'
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
-    App\:
-        resource: '../src/'
-        exclude:
-            - '../src/DependencyInjection/'
-            - '../src/Entity/'
-            - '../src/Kernel.php'
-            - '../src/Tests/'
+            # Event subscribers priorities:
+            #  The default is 0.
+            #  The highest the priority, the earlier a listener is executed.
+            #  The symfony subscribers use values from -250 to +250, but we can use whatever integers we want.
+            $requestTransactionSubscriberPriority: 30
+            $lockManagerSubscriberPriority: 20
+            $eventFlusherSubscriberPriority: 10
 
-    # controllers are imported separately to make sure services can be injected
-    # as action arguments even if you don't extend any base controller class
-    App\Controller\:
-        resource: '../src/Controller/'
-        tags: ['controller.service_arguments']
+    ####################################################################################################################
+    # BATCH AUTO-WIRING
+    ####################################################################################################################
+
+    # Makes classes in src/ available to be used as services.
+    # This creates a service per class whose id is the fully-qualified class name.
+    Acme\App\:
+        resource: '../src/*'
+        # You can exclude directories or files but if a service is unused, it's removed anyway.
+        # However, excluding these makes the auto-wiring faster and less prone to errors.
+        exclude: '../src/**/{Kernel.php,Entity,*Enum.php,*ValueObject.php,*Dto.php,*ViewModel.php}'
+
+#    # controllers are imported separately to make sure services can be injected
+#    # as action arguments even if you don't extend any base controller class
+#    App\Controller\:
+#        resource: '../src/Controller/'
+#        tags: ['controller.service_arguments']
+
+    # So we can use these fixtures
+    Acme\App\Build\Fixture\Doctrine\:
+        resource: '../build/Fixture/Doctrine/*'
+
+    Acme\PhpExtension\:
+        resource: '../lib/php-extension/src/*'
+        # You can exclude directories or files but if a service is unused, it's removed anyway.
+        # However, excluding these makes the auto-wiring faster and less prone to errors.
+        exclude: '../lib/php-extension/src/**/{Entity,*Enum.php,*ValueObject.php,*Dto.php,*ViewModel.php}'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    ####################################################################################################################
+    # ADJUSTMENTS TO THE AUTO-WIRING
+    ####################################################################################################################
+
+    # When the service definition only contains arguments, you can omit the
+    # 'arguments' key and define the arguments just below the service class
+
+    # We can make services lazy loaded, so that we can get it from the container and inject it into the service
+    # without it being instantiated, adding `lazy: true`
+
+    # There are several implementations of this interface, so we need to choose one of them
+    Acme\App\Core\Port\Persistence\KeyValueStorageInterface:
+        class: Acme\App\Infrastructure\Persistence\Doctrine\KeyValueStorage
+
+    Acme\App\Core\Port\Persistence\QueryServiceRouter:
+        - '@Acme\App\Infrastructure\Persistence\Doctrine\DqlPersistenceService'
+
+    Acme\App\Core\Port\Validation\PhoneNumber\PhoneNumberValidatorInterface:
+        class: Acme\App\Infrastructure\Validation\PhoneNumber\LibPhoneNumber\PhoneNumberValidator
+        arguments:
+            - '@libphonenumber\PhoneNumberUtil'
+
+    libphonenumber\PhoneNumberUtil:
+        factory: ['libphonenumber\PhoneNumberUtil', getInstance]
+
+    Symfony\Bridge\PsrHttpMessage\HttpFoundationFactoryInterface:
+        class: Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory
+
+    Symfony\Bridge\PsrHttpMessage\HttpMessageFactoryInterface:
+        class: Symfony\Bridge\PsrHttpMessage\Factory\DiactorosFactory
+
+    Acme\App\Core\Component\User\Application\Repository\UserRepositoryInterface:
+        class: Acme\App\Core\Component\User\Application\Repository\DQL\UserRepository
+        public: true

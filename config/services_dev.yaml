@@ -1,0 +1,12 @@
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        # this means you cannot fetch services directly from the container via $container->get()
+        # if you need to do this, you can override this setting on individual services
+        public: false
+
+    # So we can use these fixtures
+    Acme\App\Test\Fixture\Doctrine\:
+        resource: '../tests/Fixture/Doctrine/*'
